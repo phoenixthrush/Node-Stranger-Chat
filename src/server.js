@@ -1,7 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 const app = express();
-const port = 8080;
+const port = 8010;
 
 app.use(express.static('public'));
 
@@ -13,11 +13,11 @@ wss.on('connection', (ws) => {
   console.log('A new client connected');
   ws.partner = null;
 
-  // Add the new client to the waiting list
+  sendOnlineCount(ws);
+
   waitingClients.push(ws);
 
   if (waitingClients.length >= 2) {
-    // Pair the first two waiting clients
     const client1 = waitingClients.shift();
     const client2 = waitingClients.shift();
 
@@ -31,33 +31,33 @@ wss.on('connection', (ws) => {
     ws.send('Waiting for a partner...');
   }
 
-  // Handle incoming messages
   ws.on('message', (message) => {
-    const messageText = message.toString(); // Convert the buffer to a string
+    const messageText = message.toString();
     console.log('Message received from client:', messageText);
+
     if (ws.partner) {
-      // Send the message to the partner as "Stranger:"
-      ws.partner.send(`Stranger: ${messageText}`);
-      // Echo the message back to the sender as "You:"
-      ws.send(`You: ${messageText}`);
+      if (ws.partner.readyState === WebSocket.OPEN) {
+        ws.partner.send(`Stranger: ${messageText}`);
+        ws.send(`You: ${messageText}`);
+      } else {
+        ws.send('Your partner is no longer connected.');
+        ws.partner = null;
+      }
     } else {
-      ws.send('No partner connected. Waiting for a match...');
+      // ws.send('No partner connected. Waiting for a match...');
     }
   });
 
-  // Handle client disconnection
   ws.on('close', () => {
     console.log('Client disconnected');
 
-    if (ws.partner) {
+    if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
       ws.partner.send('Your partner has disconnected.');
       ws.partner.partner = null;
     }
 
-    // Remove the client from the waiting list
     waitingClients = waitingClients.filter(client => client !== ws);
 
-    // If there are at least two clients waiting, pair the next two clients
     if (waitingClients.length >= 2) {
       const nextClient1 = waitingClients.shift();
       const nextClient2 = waitingClients.shift();
@@ -81,3 +81,10 @@ app.server.on('upgrade', (request, socket, head) => {
     wss.emit('connection', ws, request);
   });
 });
+
+function sendOnlineCount(client) {
+  const onlineCount = wss.clients.size;
+  if (client.readyState === WebSocket.OPEN) {
+    client.send(`Currently online: ${onlineCount} users`);
+  }
+}
