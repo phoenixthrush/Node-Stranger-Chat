@@ -1,0 +1,9 @@
+services:
+  node-app:
+    image: node:latest
+    working_dir: /usr/src/app
+    volumes:
+      - ./src:/usr/src/app
+    ports:
+      - 127.0.0.1:8010:8080
+    command: node server.js

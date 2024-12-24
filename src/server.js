@@ -11,15 +11,7 @@ let waitingClients = [];
 
 wss.on('connection', (ws) => {
   console.log('A new client connected');
-  let paired = false;
-  ws.partner = null; // Store the partner as a property of the WebSocket object
-
-  // Send the current online user count to the new client
-  const onlineCount = wss.clients.size;
-  ws.send(`Currently online: ${onlineCount} users`);
-
-  // Log number of connected users
-  console.log(`Currently online: ${onlineCount} users`);
+  ws.partner = null;
 
   // Add the new client to the waiting list
   waitingClients.push(ws);
@@ -44,26 +36,22 @@ wss.on('connection', (ws) => {
     const messageText = message.toString(); // Convert the buffer to a string
     console.log('Message received from client:', messageText);
     if (ws.partner) {
-      ws.partner.send(messageText); // Send the message to the partner
-      console.log('Message sent to partner:', messageText);
+      // Send the message to the partner as "Stranger:"
+      ws.partner.send(`Stranger: ${messageText}`);
+      // Echo the message back to the sender as "You:"
+      ws.send(`You: ${messageText}`);
+    } else {
+      ws.send('No partner connected. Waiting for a match...');
     }
   });
 
   // Handle client disconnection
   ws.on('close', () => {
     console.log('Client disconnected');
-    // Log number of connected users when a client disconnects
-    const onlineCount = wss.clients.size;
-    console.log(`Currently online: ${onlineCount} users`);
-    // Send the updated user count to all clients
-    wss.clients.forEach(client => {
-      client.send(`Currently online: ${onlineCount} users`);
-    });
 
     if (ws.partner) {
       ws.partner.send('Your partner has disconnected.');
-      ws.partner.partner = null; // Break the link to the disconnected client
-      ws.partner = null;
+      ws.partner.partner = null;
     }
 
     // Remove the client from the waiting list
