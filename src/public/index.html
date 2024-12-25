@@ -1,121 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Random Stranger Chat</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-    }
-    #chat {
-      width: 50%;
-      margin: 0 auto;
-    }
-    #messages {
-      border: 1px solid #ccc;
-      height: 300px;
-      overflow-y: scroll;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    input {
-      width: 80%;
-      padding: 10px;
-    }
-    button {
-      padding: 10px 20px;
-    }
-    .you-message {
-      color: blue;
-      text-align: left;
-    }
-    .stranger-message {
-      color: red;
-      text-align: left;
-    }
-  </style>
-</head>
-<body>
-  <h1>Random Stranger Chat</h1>
-  <div id="chat">
-    <div id="messages"></div>
-    <input type="text" id="messageInput" placeholder="Type a message..." />
-    <button id="send">Send</button>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Stranger Chat</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+      }
+      #chat {
+        width: 50%;
+        margin: 0 auto;
+      }
+      #messages {
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: scroll;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      input {
+        width: 80%;
+        padding: 10px;
+      }
+      button {
+        padding: 10px 20px;
+      }
+      .you-message {
+        color: blue;
+        text-align: left;
+      }
+      .stranger-message {
+        color: red;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Random Stranger Chat</h1>
+    <div id="chat">
+      <div id="messages"></div>
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button id="send">Send</button>
+    </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ws`;
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const host = window.location.host;
+        const wsUrl = `${protocol}//${host}/ws`;
 
-      const ws = new WebSocket(wsUrl);
+        const ws = new WebSocket(wsUrl);
 
-      ws.onopen = () => {
-        console.log('Connected to the server');
-      };
+        ws.onopen = () => {
+          console.log("Connected to the server");
+        };
 
-      ws.onmessage = (event) => {
-        const message = event.data;  // The message from the server
-        const messageDiv = document.createElement('div');
+        ws.onmessage = (event) => {
+          const message = event.data; // The message from the server
+          const messageDiv = document.createElement("div");
 
-        // Check message type and style accordingly
-        if (message.startsWith('You:')) {
-          messageDiv.className = 'you-message';
-        } else if (message.startsWith('Stranger:')) {
-          messageDiv.className = 'stranger-message';
-        }
+          // Check message type and style accordingly
+          if (message.startsWith("You:")) {
+            messageDiv.className = "you-message";
+          } else if (message.startsWith("Stranger:")) {
+            messageDiv.className = "stranger-message";
+          }
 
-        messageDiv.textContent = message;
-        document.getElementById('messages').appendChild(messageDiv);
-        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-      };
+          messageDiv.textContent = message;
+          document.getElementById("messages").appendChild(messageDiv);
+          document.getElementById("messages").scrollTop =
+            document.getElementById("messages").scrollHeight;
+        };
 
-      const messageInput = document.getElementById('messageInput');
+        const messageInput = document.getElementById("messageInput");
 
-      // Send message on Enter key press
-      messageInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && event.target.value.trim()) {
-          const message = event.target.value.trim();
-          console.log('Sending message:', message); // Log the message being sent
-          ws.send(message);  // Send the message as a string
+        // Send message on Enter key press
+        messageInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && event.target.value.trim()) {
+            const message = event.target.value.trim();
+            console.log("Sending message:", message); // Log the message being sent
+            ws.send(message); // Send the message as a string
 
-          event.target.value = ''; // Clear input after sending
-        }
+            event.target.value = ""; // Clear input after sending
+          }
+        });
+
+        // Send message when the Send button is clicked
+        const sendButton = document.getElementById("send");
+        sendButton.addEventListener("click", () => {
+          if (messageInput.value.trim()) {
+            const message = messageInput.value.trim();
+            console.log("Sending message:", message); // Log the message being sent
+            ws.send(message); // Send the message as a string
+
+            messageInput.value = ""; // Clear input after sending
+          }
+        });
+
+        // Handle WebSocket close event
+        ws.onclose = () => {
+          const messageDiv = document.createElement("div");
+          messageDiv.textContent = "Connection lost. Please reload the page.";
+          messageDiv.className = "info-message";
+          document.getElementById("messages").appendChild(messageDiv);
+        };
+
+        // Handle WebSocket error event
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          const messageDiv = document.createElement("div");
+          messageDiv.textContent = "An error occurred. Please try again later.";
+          messageDiv.className = "info-message";
+          document.getElementById("messages").appendChild(messageDiv);
+        };
       });
-
-      // Send message when the Send button is clicked
-      const sendButton = document.getElementById('send');
-      sendButton.addEventListener('click', () => {
-        if (messageInput.value.trim()) {
-          const message = messageInput.value.trim();
-          console.log('Sending message:', message); // Log the message being sent
-          ws.send(message);  // Send the message as a string
-
-          messageInput.value = ''; // Clear input after sending
-        }
-      });
-
-      // Handle WebSocket close event
-      ws.onclose = () => {
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = 'Connection lost. Please reload the page.';
-        messageDiv.className = 'info-message';
-        document.getElementById('messages').appendChild(messageDiv);
-      };
-
-      // Handle WebSocket error event
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = 'An error occurred. Please try again later.';
-        messageDiv.className = 'info-message';
-        document.getElementById('messages').appendChild(messageDiv);
-      };
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
