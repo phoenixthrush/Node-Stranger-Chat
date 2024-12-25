@@ -36,9 +36,18 @@
         color: red;
         text-align: left;
       }
+      #js-banner {
+        background-color: yellow;
+        padding: 10px;
+        font-size: 18px;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
+    <noscript>
+      <div id="js-banner">Please enable JavaScript to use the chat.</div>
+    </noscript>
     <h1>Random Stranger Chat</h1>
     <div id="chat">
       <div id="messages"></div>
@@ -59,10 +68,9 @@
         };
 
         ws.onmessage = (event) => {
-          const message = event.data; // The message from the server
+          const message = event.data;
           const messageDiv = document.createElement("div");
 
-          // Check message type and style accordingly
           if (message.startsWith("You:")) {
             messageDiv.className = "you-message";
           } else if (message.startsWith("Stranger:")) {
@@ -77,30 +85,27 @@
 
         const messageInput = document.getElementById("messageInput");
 
-        // Send message on Enter key press
         messageInput.addEventListener("keydown", (event) => {
           if (event.key === "Enter" && event.target.value.trim()) {
             const message = event.target.value.trim();
-            console.log("Sending message:", message); // Log the message being sent
-            ws.send(message); // Send the message as a string
+            console.log("Sending message:", message);
+            ws.send(message);
 
-            event.target.value = ""; // Clear input after sending
+            event.target.value = "";
           }
         });
 
-        // Send message when the Send button is clicked
         const sendButton = document.getElementById("send");
         sendButton.addEventListener("click", () => {
           if (messageInput.value.trim()) {
             const message = messageInput.value.trim();
-            console.log("Sending message:", message); // Log the message being sent
-            ws.send(message); // Send the message as a string
+            console.log("Sending message:", message);
+            ws.send(message);
 
-            messageInput.value = ""; // Clear input after sending
+            messageInput.value = "";
           }
         });
 
-        // Handle WebSocket close event
         ws.onclose = () => {
           const messageDiv = document.createElement("div");
           messageDiv.textContent = "Connection lost. Please reload the page.";
@@ -108,7 +113,6 @@
           document.getElementById("messages").appendChild(messageDiv);
         };
 
-        // Handle WebSocket error event
         ws.onerror = (error) => {
           console.error("WebSocket error:", error);
           const messageDiv = document.createElement("div");
